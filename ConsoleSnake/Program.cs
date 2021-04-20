@@ -1,0 +1,198 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Drawing;
+using System.Linq;
+using System.Threading.Tasks;
+
+namespace ConsoleSnake
+{
+    public class DisplayElement
+    {
+        public Point Point { get; set; }
+        public char Value { get; set; }
+    }
+
+    public enum Direction
+    {
+        North,
+        South,
+        East,
+        West
+    }
+
+    class Program
+    {
+        private static readonly Random Random = new Random(Guid.NewGuid().GetHashCode());
+        private const char _food = ' ';
+        private const char SnakeChar = ' ';
+        private static bool Run = true;
+        private const char Emtpy = '█';
+        private static DisplayElement[][] _display = null;
+        private static int _score = 0;
+        private const int Speed = 15;
+        private static List<Point> _snake;
+        private static Direction _direction = Direction.East;
+        private static Direction _lastDirection = Direction.East;
+
+        static void Main(string[] args)
+        {
+            Console.CursorVisible = false;
+            Console.Clear();
+            _display = new DisplayElement[Console.WindowWidth - 2][];
+            for (int item = 0; item < _display.Length; item++)
+            {
+                var widthCol = new DisplayElement[Console.WindowHeight - 2];
+                for (int i = 0; i < widthCol.Length; i++)
+                {
+                    widthCol[i] = new DisplayElement {Value = Emtpy, Point = new Point(item, i)};
+                    OutPutDisplayItem(widthCol[i]);
+                }
+
+                _display[item] = widthCol;
+            }
+
+            GenFood();
+            _snake = new List<Point>
+            {
+                new Point(_display.Length / 2 - 3, (Console.WindowHeight - 2) / 2),
+                new Point(_display.Length / 2 - 2, (Console.WindowHeight - 2) / 2),
+                new Point(_display.Length / 2 - 1, (Console.WindowHeight - 2) / 2),
+                new Point(_display.Length / 2, (Console.WindowHeight - 2) / 2),
+            };
+            foreach (var item in _snake)
+            {
+                UpdateDisplayElementFromPoint(item, SnakeChar);
+            }
+
+            System.Threading.Tasks.Task.Run(() => GameLoop());
+            while (Run)
+            {
+                if (Console.KeyAvailable)
+                {
+                    var key = Console.ReadKey(true);
+
+                    switch (key.Key)
+                    {
+                        case ConsoleKey.UpArrow:
+                            if (_lastDirection != Direction.South)
+                            {
+                                _direction = Direction.North;
+                            }
+
+                            break;
+                        case ConsoleKey.DownArrow:
+                            if (_lastDirection != Direction.North)
+                            {
+                                _direction = Direction.South;
+                            }
+
+                            break;
+                        case ConsoleKey.LeftArrow:
+                            if (_lastDirection != Direction.East)
+                            {
+                                _direction = Direction.West;
+                            }
+
+                            break;
+                        case ConsoleKey.RightArrow:
+                            if (_lastDirection != Direction.West)
+                            {
+                                _direction = Direction.East;
+                            }
+
+                            break;
+                    }
+                }
+            }
+
+            Console.WriteLine("Game Over Score:" + _score);
+            Console.Read();
+        }
+
+        static DisplayElement GetElementByPoint(Point point)
+        {
+            return _display[point.X][point.Y];
+        }
+
+        static void UpdateDisplayElementFromPoint(Point point, char value)
+        {
+            var item = GetElementByPoint(point);
+            item.Value = value;
+            OutPutDisplayItem(item);
+        }
+
+        static async Task GameLoop()
+        {
+            var head = _snake.Last();
+            var tail = _snake.First();
+
+            var point = new Point(head.X, head.Y);
+            _lastDirection = _direction;
+            switch (_direction)
+            {
+                case Direction.North:
+                    point.Y -= 1;
+                    break;
+                case Direction.South:
+                    point.Y += 1;
+                    break;
+                case Direction.East:
+                    point.X += 1;
+                    break;
+                case Direction.West:
+                    point.X -= 1;
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+
+            // check if out side bounds of map or we have hit our own tail\other part of snake
+            if (point.X >= _display.Length || point.Y >= _display[0].Length || point.X < 0 || point.Y < 1 ||
+                _snake.Skip(1).Contains(point))
+            {
+                Console.Clear();
+                Run = false;
+                return;
+            }
+
+            _snake.Add(point);
+
+            var item = GetElementByPoint(point);
+
+            if (item.Value != _food)
+            {
+                _snake = _snake.Skip(1).ToList();
+            }
+            else
+            {
+                _score += Speed;
+                GenFood();
+            }
+
+            item.Value = SnakeChar;
+            OutPutDisplayItem(item);
+            UpdateDisplayElementFromPoint(tail, Emtpy);
+            Console.SetCursorPosition(0, 0);
+            Console.WriteLine("Score = " + _score);
+            System.Threading.Thread.Sleep(1000 / Speed);
+            await GameLoop();
+        }
+
+
+        private static void GenFood()
+        {
+            var freeLabels = _display.SelectMany(t => t.Where(y => y.Value == Emtpy)).ToArray();
+            var item = freeLabels[Random.Next(0, freeLabels.Length)];
+            item.Value = _food;
+            Console.BackgroundColor = ConsoleColor.Red;
+            OutPutDisplayItem(item);
+            Console.BackgroundColor = ConsoleColor.Black;
+        }
+
+        private static void OutPutDisplayItem(DisplayElement displayElement)
+        {
+            Console.SetCursorPosition(displayElement.Point.X, displayElement.Point.Y + 1);
+            Console.Write(displayElement.Value);
+        }
+    }
+}
