@@ -20,34 +20,33 @@ namespace ConsoleSnake
         West
     }
 
-    class Program
+    internal static class Program
     {
         private static readonly Random Random = new Random(Guid.NewGuid().GetHashCode());
-        private const char _food = ' ';
+        private const char Food = ' ';
         private const char SnakeChar = ' ';
-        private static bool Run = true;
-        private const char Emtpy = '█';
-        private static DisplayElement[][] _display = null;
-        private static int _score = 0;
+        private static bool _run = true;
+        private const char Empty = '█';
+        private static DisplayElement[][] _display;
+        private static int _score;
         private const int Speed = 15;
         private static List<Point> _snake;
         private static Direction _direction = Direction.East;
         private static Direction _lastDirection = Direction.East;
 
-        static void Main(string[] args)
+        private static void Main()
         {
             Console.CursorVisible = false;
             Console.Clear();
             _display = new DisplayElement[Console.WindowWidth - 2][];
-            for (int item = 0; item < _display.Length; item++)
+            for (var item = 0; item < _display.Length; item++)
             {
                 var widthCol = new DisplayElement[Console.WindowHeight - 2];
-                for (int i = 0; i < widthCol.Length; i++)
+                for (var i = 0; i < widthCol.Length; i++)
                 {
-                    widthCol[i] = new DisplayElement {Value = Emtpy, Point = new Point(item, i)};
+                    widthCol[i] = new DisplayElement {Value = Empty, Point = new Point(item, i)};
                     OutPutDisplayItem(widthCol[i]);
                 }
-
                 _display[item] = widthCol;
             }
 
@@ -64,8 +63,8 @@ namespace ConsoleSnake
                 UpdateDisplayElementFromPoint(item, SnakeChar);
             }
 
-            System.Threading.Tasks.Task.Run(() => GameLoop());
-            while (Run)
+            Task.Run(GameLoop);
+            while (_run)
             {
                 if (Console.KeyAvailable)
                 {
@@ -105,7 +104,7 @@ namespace ConsoleSnake
                 }
             }
 
-            Console.WriteLine("Game Over Score:" + _score);
+            Console.WriteLine($"Game Over Score:{_score}");
             Console.Read();
         }
 
@@ -121,7 +120,7 @@ namespace ConsoleSnake
             OutPutDisplayItem(item);
         }
 
-        static async Task GameLoop()
+        static  void GameLoop()
         {
             var head = _snake.Last();
             var tail = _snake.First();
@@ -151,15 +150,14 @@ namespace ConsoleSnake
                 _snake.Skip(1).Contains(point))
             {
                 Console.Clear();
-                Run = false;
+                _run = false;
                 return;
             }
 
             _snake.Add(point);
 
             var item = GetElementByPoint(point);
-
-            if (item.Value != _food)
+            if (item.Value != Food)
             {
                 _snake = _snake.Skip(1).ToList();
             }
@@ -171,19 +169,18 @@ namespace ConsoleSnake
 
             item.Value = SnakeChar;
             OutPutDisplayItem(item);
-            UpdateDisplayElementFromPoint(tail, Emtpy);
+            UpdateDisplayElementFromPoint(tail, Empty);
             Console.SetCursorPosition(0, 0);
-            Console.WriteLine("Score = " + _score);
+            Console.WriteLine($"Score = {_score}");
             System.Threading.Thread.Sleep(1000 / Speed);
-            await GameLoop();
+            Task.Run(GameLoop);
         }
-
 
         private static void GenFood()
         {
-            var freeLabels = _display.SelectMany(t => t.Where(y => y.Value == Emtpy)).ToArray();
+            var freeLabels = _display.SelectMany(t => t.Where(y => y.Value == Empty)).ToArray();
             var item = freeLabels[Random.Next(0, freeLabels.Length)];
-            item.Value = _food;
+            item.Value = Food;
             Console.BackgroundColor = ConsoleColor.Red;
             OutPutDisplayItem(item);
             Console.BackgroundColor = ConsoleColor.Black;
