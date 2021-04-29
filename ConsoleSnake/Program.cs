@@ -33,7 +33,7 @@ namespace ConsoleSnake
         private static List<Point> _snake;
         private static Direction _direction = Direction.East;
         private static Direction _lastDirection = Direction.East;
-
+        
         private static void Main()
         {
             Console.CursorVisible = false;
@@ -173,7 +173,7 @@ namespace ConsoleSnake
             Console.SetCursorPosition(0, 0);
             Console.WriteLine($"Score = {_score}");
             System.Threading.Thread.Sleep(1000 / Speed);
-            Task.Run(GameLoop);
+            Task.Run(GameLoop);             // I know just calling game loop can be done but might cause a stack overflow if game is really long
         }
 
         private static void GenFood()
