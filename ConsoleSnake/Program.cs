@@ -172,10 +172,12 @@ namespace ConsoleSnake
 
                 item.Value = SnakeChar;
                 OutPutDisplayItem(item);
-                if (item.Point.X != head.X || item.Point.Y != head.Y)   // if head is same space tail was we don't want to blank it
+                if (item.Point.X != head.X ||
+                    item.Point.Y != head.Y) // if head is same space tail was we don't want to blank it
                 {
                     UpdateDisplayElementFromPoint(tail, Empty);
                 }
+
                 Console.SetCursorPosition(0, 0);
                 Console.WriteLine($"Score = {_score}");
                 System.Threading.Thread.Sleep(1000 / Speed);
