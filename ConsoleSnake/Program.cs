@@ -33,7 +33,7 @@ namespace ConsoleSnake
         private static List<Point> _snake;
         private static Direction _direction = Direction.East;
         private static Direction _lastDirection = Direction.East;
-        
+
         private static void Main()
         {
             Console.CursorVisible = false;
@@ -47,6 +47,7 @@ namespace ConsoleSnake
                     widthCol[i] = new DisplayElement {Value = Empty, Point = new Point(item, i)};
                     OutPutDisplayItem(widthCol[i]);
                 }
+
                 _display[item] = widthCol;
             }
 
@@ -120,60 +121,65 @@ namespace ConsoleSnake
             OutPutDisplayItem(item);
         }
 
-        static  void GameLoop()
+        static void GameLoop()
         {
-            var head = _snake.Last();
-            var tail = _snake.First();
-
-            var point = new Point(head.X, head.Y);
-            _lastDirection = _direction;
-            switch (_direction)
+            while (_run)
             {
-                case Direction.North:
-                    point.Y -= 1;
-                    break;
-                case Direction.South:
-                    point.Y += 1;
-                    break;
-                case Direction.East:
-                    point.X += 1;
-                    break;
-                case Direction.West:
-                    point.X -= 1;
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException();
-            }
+                var head = _snake.Last();
+                var tail = _snake.First();
 
-            // check if out side bounds of map or we have hit our own tail\other part of snake
-            if (point.X >= _display.Length || point.Y >= _display[0].Length || point.X < 0 || point.Y < 0 ||
-                _snake.Skip(1).Contains(point))
-            {
-                Console.Clear();
-                _run = false;
-                return;
-            }
+                var point = new Point(head.X, head.Y);
+                _lastDirection = _direction;
+                switch (_direction)
+                {
+                    case Direction.North:
+                        point.Y -= 1;
+                        break;
+                    case Direction.South:
+                        point.Y += 1;
+                        break;
+                    case Direction.East:
+                        point.X += 1;
+                        break;
+                    case Direction.West:
+                        point.X -= 1;
+                        break;
+                    default:
+                        throw new ArgumentOutOfRangeException();
+                }
 
-            _snake.Add(point);
+                // check if out side bounds of map or we have hit our own tail\other part of snake
+                if (point.X >= _display.Length || point.Y >= _display[0].Length || point.X < 0 || point.Y < 0 ||
+                    _snake.Skip(1).Contains(point))
+                {
+                    Console.Clear();
+                    _run = false;
+                    return;
+                }
 
-            var item = GetElementByPoint(point);
-            if (item.Value != Food)
-            {
-                _snake = _snake.Skip(1).ToList();
-            }
-            else
-            {
-                _score += Speed;
-                GenFood();
-            }
+                _snake.Add(point);
 
-            item.Value = SnakeChar;
-            OutPutDisplayItem(item);
-            UpdateDisplayElementFromPoint(tail, Empty);
-            Console.SetCursorPosition(0, 0);
-            Console.WriteLine($"Score = {_score}");
-            System.Threading.Thread.Sleep(1000 / Speed);
-            Task.Run(GameLoop);             // I know just calling game loop can be done but might cause a stack overflow if game is really long
+                var item = GetElementByPoint(point);
+                if (item.Value != Food)
+                {
+                    _snake = _snake.Skip(1).ToList();
+                }
+                else
+                {
+                    _score += Speed;
+                    GenFood();
+                }
+
+                item.Value = SnakeChar;
+                OutPutDisplayItem(item);
+                if (item.Point.X != head.X || item.Point.Y != head.Y)   // if head is same space tail was we don't want to blank it
+                {
+                    UpdateDisplayElementFromPoint(tail, Empty);
+                }
+                Console.SetCursorPosition(0, 0);
+                Console.WriteLine($"Score = {_score}");
+                System.Threading.Thread.Sleep(1000 / Speed);
+            }
         }
 
         private static void GenFood()
