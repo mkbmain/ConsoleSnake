@@ -10,6 +10,15 @@ namespace ConsoleSnake
     {
         private static bool _run = true;
 
+        private static Dictionary<ConsoleKey, (Direction, Direction)> KeyDirectionLookUps =
+            new Dictionary<ConsoleKey, (Direction, Direction)>
+            {
+                {ConsoleKey.UpArrow, (Direction.South, Direction.North)},
+                {ConsoleKey.DownArrow, (Direction.North, Direction.South)},
+                {ConsoleKey.LeftArrow, (Direction.East, Direction.West)},
+                {ConsoleKey.RightArrow, (Direction.West, Direction.East)},
+            };
+
         private static void Main()
         {
             Console.CursorVisible = false;
@@ -23,46 +32,19 @@ namespace ConsoleSnake
             Console.WriteLine($"Game Over Score:{GlobalGameSettings.Score}");
             Console.Read();
         }
-        
+
+
         private static void KeyBoardHandle()
         {
             while (_run)
             {
-                if (Console.KeyAvailable)
-                {
-                    var key = Console.ReadKey(true);
-
-                    switch (key.Key)
-                    {
-                        case ConsoleKey.UpArrow:
-                            if (GlobalGameSettings.LastDirection != Direction.South)
-                            {
-                                GlobalGameSettings. Direction = Direction.North;
-                            }
-                            break;
-                        case ConsoleKey.DownArrow:
-                            if (GlobalGameSettings.LastDirection != Direction.North)
-                            {
-                                GlobalGameSettings.Direction = Direction.South;
-                            }
-                            break;
-                        case ConsoleKey.LeftArrow:
-                            if (GlobalGameSettings.LastDirection != Direction.East)
-                            {
-                                GlobalGameSettings.  Direction = Direction.West;
-                            }
-                            break;
-                        case ConsoleKey.RightArrow:
-                            if (GlobalGameSettings.LastDirection != Direction.West)
-                            {
-                                GlobalGameSettings. Direction = Direction.East;
-                            }
-                            break;
-                    }
-                }
+                if (!Console.KeyAvailable) continue;
+                if (!KeyDirectionLookUps.TryGetValue(Console.ReadKey(true).Key, out var items)) continue;
+                if (GlobalGameSettings.LastDirection == items.Item1) continue;
+                GlobalGameSettings.Direction = items.Item2;
             }
         }
-        
+
         static void GameLoop()
         {
             while (_run)
@@ -91,9 +73,10 @@ namespace ConsoleSnake
                 }
 
                 // check if out side bounds of map or we have hit our own tail\other part of snake
-                if (point.X >= DisplayManager.DisplayElements.Length || point.Y >= DisplayManager.DisplayElements[0].Length || point.X < 0 ||
+                if (point.X >= DisplayManager.DisplayElements.Length ||
+                    point.Y >= DisplayManager.DisplayElements[0].Length || point.X < 0 ||
                     point.Y < 0 ||
-                    GlobalGameSettings. Snake.Skip(1).Contains(point))
+                    GlobalGameSettings.Snake.Skip(1).Contains(point))
                 {
                     Console.Clear();
                     _run = false;
@@ -105,7 +88,7 @@ namespace ConsoleSnake
                 var item = DisplayManager.GetElementByPoint(point);
                 if (item.Value != DisplayManager.Food)
                 {
-                    GlobalGameSettings.  Snake = GlobalGameSettings.Snake.Skip(1).ToList();
+                    GlobalGameSettings.Snake = GlobalGameSettings.Snake.Skip(1).ToList();
                 }
                 else
                 {
@@ -120,9 +103,8 @@ namespace ConsoleSnake
                 {
                     DisplayManager.UpdateDisplayElementFromPoint(tail, DisplayManager.Empty);
                 }
-
-                Console.SetCursorPosition(0, 0);
-                Console.WriteLine($"Score = {GlobalGameSettings.Score}");
+                
+                DisplayManager.WriteScore();
                 System.Threading.Thread.Sleep(1000 / GlobalGameSettings.Speed);
             }
         }

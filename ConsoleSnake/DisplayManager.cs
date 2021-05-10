@@ -11,6 +11,12 @@ namespace ConsoleSnake
         public const char SnakeChar = ' ';
         public static DisplayElement[][] DisplayElements;
 
+        public static void WriteScore()
+        {
+            Console.SetCursorPosition(0, 0);
+            Console.WriteLine($"Score = {GlobalGameSettings.Score}");
+        }
+        
         public static void BuildDisplay()
         {
             DisplayElements = new DisplayElement[Console.WindowWidth - 2][];
