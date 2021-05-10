@@ -10,7 +10,7 @@ namespace ConsoleSnake
     {
         private static bool _run = true;
 
-        // items as followed if consolKey == dictKey , and there not going in Direction 1 then change there Direction to Direction 2
+        // items as followed if ConsoleKey == dictKey , and there not going in Direction 1 then change there Direction to Direction 2
         private static Dictionary<ConsoleKey, (Direction, Direction)> KeyDirectionLookUps =
             new Dictionary<ConsoleKey, (Direction, Direction)>
             {
